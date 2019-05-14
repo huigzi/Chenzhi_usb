@@ -2,9 +2,11 @@
 using LibUsbDotNet.Main;
 using System;
 using System.IO;
+using System.Threading.Tasks.Dataflow;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
+using MathNet.Numerics.Data.Matlab;
 
 namespace UsbTest
 {
@@ -48,8 +50,11 @@ namespace UsbTest
         private DataState dataState = DataState.Stoped;
         private int count1, count2;
 
+        private ActionBlock<byte[]> _action; 
+
         private delegate void ShowMsg();
         private delegate void UpdateBytesDelegate(byte[] data);
+
 
         private void Window_Loaded(object sender, EventArgs e)
         {
@@ -86,11 +91,37 @@ namespace UsbTest
         {
             InitializeComponent();
             framNum.Text = Properties.Settings.Default.frame;
+            _action = new ActionBlock<byte[]>(x => Process(x));
+
+            var algorithm = new Algorithm();
+            algorithm.Process();
+
+        }
+
+        private void Process(byte[] data)
+        {
+
+            var bp = MatlabReader.ReadAll<double>("bp.mat")["bp"].ToArray();
+
+            var bl = MatlabReader.ReadAll<double>("bl.mat")["bl"].ToArray();
+
+            double[,] signal = new double[720, 6];
+
+            for (int i = 0; i < 720; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    signal[i, j] = data[720 * i + 2 + j];
+                }
+            }
+
         }
 
         private void OnRxEndPointData(object sender, EndpointDataEventArgs e)
         {
             AddMsg($" > {e.Count} data received");
+
+            _action.Post(e.Buffer);
 
             if (dataState == DataState.Started)
             {
@@ -184,7 +215,7 @@ namespace UsbTest
 
                         reader = MyUsbDevice.OpenEndpointReader(ReadEndpointID.Ep01);
                         reader.DataReceived += OnRxEndPointData;
-                        reader.ReadBufferSize = 8640;//13760;
+                        reader.ReadBufferSize = 11520;//13760;
                         reader.Reset();
                         reader.DataReceivedEnabled = true;
                         scanButton.IsEnabled = false;
