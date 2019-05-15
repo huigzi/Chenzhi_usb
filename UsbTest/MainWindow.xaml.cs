@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using MathNet.Numerics.Data.Matlab;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace UsbTest
 {
@@ -50,7 +51,9 @@ namespace UsbTest
         private DataState dataState = DataState.Stoped;
         private int count1, count2;
 
-        private ActionBlock<byte[]> _action; 
+        private readonly ActionBlock<byte[]> _action;
+        private readonly Algorithm _algorithm;
+
 
         private delegate void ShowMsg();
         private delegate void UpdateBytesDelegate(byte[] data);
@@ -93,27 +96,42 @@ namespace UsbTest
             framNum.Text = Properties.Settings.Default.frame;
             _action = new ActionBlock<byte[]>(x => Process(x));
 
-            var algorithm = new Algorithm();
-            algorithm.Process();
-
+            _algorithm = new Algorithm();
         }
 
         private void Process(byte[] data)
         {
 
-            var bp = MatlabReader.ReadAll<double>("bp.mat")["bp"].ToArray();
-
-            var bl = MatlabReader.ReadAll<double>("bl.mat")["bl"].ToArray();
-
-            double[,] signal = new double[720, 6];
+            double[,] signal = new double[720, 5];
 
             for (int i = 0; i < 720; i++)
             {
-                for (int j = 0; j < 6; j++)
-                {
-                    signal[i, j] = data[720 * i + 2 + j];
-                }
+                signal[i, 0] = BitConverter.ToInt16(data, i * 16 + 4);
+                signal[i, 1] = BitConverter.ToInt16(data, i * 16 + 6);
+                signal[i, 2] = BitConverter.ToInt16(data, i * 16 + 8);
+                signal[i, 3] = BitConverter.ToInt16(data, i * 16 + 10);
+                signal[i, 4] = BitConverter.ToInt16(data, i * 16 + 12);
             }
+
+            var signalInput = Matrix<double>.Build.DenseOfArray(signal).SubMatrix(199, 520, 0, 5);
+
+            //手势计算
+            _algorithm.GestureCalculate(signalInput);
+
+            Dispatcher.Invoke(() =>
+            {
+                if (_algorithm.StartFlag == false)
+                {
+                    Status.Text = "Stop";
+                }
+                else
+                {
+                    Status.Text = "Start";
+                }
+
+                Slider1.Value = _algorithm.Volume;
+
+            });
 
         }
 
@@ -137,7 +155,6 @@ namespace UsbTest
 
         private void UsbFind()
         {
-            lbxDev.Items.Clear();
             regList = UsbDevice.AllDevices.FindAll(MyUsbFinder);
             if (regList.Count == 0)
             {
@@ -146,7 +163,7 @@ namespace UsbTest
 
             foreach(UsbRegistry regDevice in regList)
             {
-                lbxDev.Items.Add(regDevice.FullName);
+                AddMsg($"{regDevice.Name} Connected");
             }
 
         }
@@ -198,10 +215,9 @@ namespace UsbTest
                 {
                     if (regList.Count != 0)
                     {
-                        lbxDev.Items.Clear();
                         foreach (UsbRegistry regDevice in regList)
                         {
-                            lbxDev.Items.Add(regDevice.FullName);
+                            AddMsg($"{regDevice.Name} Connected");
                         }
 
                         MyUsbDevice = UsbDevice.OpenUsbDevice(MyUsbFinder);
@@ -237,7 +253,7 @@ namespace UsbTest
                     reader.DataReceivedEnabled = false;
                     reader.DataReceived -= OnRxEndPointData;
 
-                    lbxDev.Items.RemoveAt(0);
+                    AddMsg($" > Device Disconnected");
                     AddMsg($" > Close Device");
 
                     if (MyUsbDevice.IsOpen)
@@ -261,7 +277,7 @@ namespace UsbTest
                     pathBotton.IsEnabled = false;
                     savButton.IsEnabled = false;
 
-                    System.Windows.MessageBox.Show("采集设备需重新上电");
+                    System.Windows.MessageBox.Show("Need Repower");
                 }
             }
         }
