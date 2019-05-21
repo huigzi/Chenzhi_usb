@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using MathNet.Numerics.Data.Matlab;
 using MathNet.Numerics.LinearAlgebra;
+using System.Windows.Media;
 
 namespace UsbTest
 {
@@ -123,10 +124,14 @@ namespace UsbTest
                 if (_algorithm.StartFlag == false)
                 {
                     Status.Text = "Stop";
+                    Status.Foreground = new SolidColorBrush(Color.FromRgb(255, 0, 0));
+                    Status.FontSize = 50;
                 }
                 else
                 {
                     Status.Text = "Start";
+                    Status.Foreground = new SolidColorBrush(Color.FromRgb(0, 255, 0));
+                    Status.FontSize = 50;
                 }
 
                 Slider1.Value = _algorithm.Volume;
@@ -261,10 +266,7 @@ namespace UsbTest
                         try
                         {
                             IUsbDevice wholeUsbDevice = MyUsbDevice as IUsbDevice;
-                            if(!(wholeUsbDevice is null))
-                            {
-                                wholeUsbDevice.ReleaseInterface(0);
-                            }
+                            wholeUsbDevice?.ReleaseInterface(0);
                         }
                         catch(Exception ex)
                         {

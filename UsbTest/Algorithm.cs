@@ -18,13 +18,37 @@ namespace UsbTest
         private readonly double winlen = 50;
         private readonly double overlap = 35;
 
+        //手势开始判断
         private readonly double triggerBegin = 2.5;
+
+        //开机关机手势
         private readonly double triggerPlayBegin = 1.5;
         private readonly double triggerPlayStop = 2;
-        private readonly double triggerVlmBegin = 2;
 
-        private readonly Vector<double> _bp = MatlabReader.ReadAll<double>("bp.mat")["bp"].Row(0);
-        private readonly Vector<double> _bl = MatlabReader.ReadAll<double>("bl.mat")["bl"].Row(0);
+        //上一首手势
+        private readonly double triggerLastBegin = 1;
+        private readonly double triggerLastStop = 1;
+
+        //下一首手势
+        private readonly double triggerNextBegin = 1;
+        private readonly double triggerNextStop = 1;
+
+        //停止暂停手势
+        private readonly double triggerPauseBegin = 1;
+        private readonly double triggerPauseStop = 1;
+        private readonly double triggerPauseBegin2 = 1;
+
+        //音量上手势
+        private readonly double triggerVolumUpBegin = 1;
+        private readonly double triggerVolumUpStop = 1;
+
+        //音量下手势
+        private readonly double triggerVolumDownBegin = 1;
+        private readonly double triggerVolumDownStop = 1;
+
+
+        private readonly Vector<double> _bp = MatlabReader.ReadAll<double>("C://bp.mat")["bp"].Row(0);
+        private readonly Vector<double> _bl = MatlabReader.ReadAll<double>("C://bl.mat")["bl"].Row(0);
 
         private int gestureStartFlag = 0;
         private int volumeStartFlag = 0;
@@ -93,9 +117,9 @@ namespace UsbTest
 
             double r = 0;
 
-            if (detector.Sum() >= 1)
+            if (detector.Sum() >= 6)
             {
-                r = peak.Sum();
+                var rangeTemp = peak.Select((x) => (x + 200 - 20 - 64) * 344 / 2 / 180000 * 100).ToArray();
             }
             else
             {
@@ -184,7 +208,7 @@ namespace UsbTest
 
                     if (volumeStartFlag == 1)
                     {
-                        if (Math.Abs(temp6 - range[2]) > triggerVlmBegin && rangeTemp != 60)
+                        if (Math.Abs(temp6 - range[2]) > 2 && Math.Abs(temp6 - range[2]) < 20 && rangeTemp != 60)
                         {
                             Volume = (int)(Volume - (temp6 - range[2]) / temp6 * 50);
                             if (Volume > 100)

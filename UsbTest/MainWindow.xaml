@@ -66,15 +66,15 @@
                         Minimum="0"/>
                 <TextBox x:Name="Status"  
                          Grid.Row="1"  
-                         Text="Stop" 
-                         FontSize="20" 
+                         Text="Stand by" 
+                         FontSize="35" 
                          VerticalContentAlignment="Center" 
                          HorizontalContentAlignment="Center"/>
                 <TextBox x:Name="Volume"  
                          Grid.Row="1"
                          Grid.Column="1"
                          Text="{Binding Path=Value, ElementName=Slider1, UpdateSourceTrigger=PropertyChanged}" 
-                         FontSize="20" 
+                         FontSize="50" 
                          VerticalContentAlignment="Center" 
                          HorizontalContentAlignment="Center"
                          />
@@ -83,8 +83,8 @@
         <GroupBox Header="Function" Grid.Row="1">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="119*"/>
-                    <ColumnDefinition Width="48*"/>
+                    <ColumnDefinition Width="100*"/>
+                    <ColumnDefinition Width="67*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -94,7 +94,7 @@
                 </Grid.RowDefinitions>
                 <Button x:Name="pathBotton" Content="Save as"  Grid.Row="2" FontWeight="Bold" Grid.ColumnSpan="2" VerticalContentAlignment="Center" Margin="10,5,10,5" Click="Button_Click_2"  IsEnabled="{Binding Path=IsChecked,ElementName=connectbutton}"/>
                 <Button x:Name="savButton" Content="Save"  Grid.Row="1" FontWeight="Bold" VerticalContentAlignment="Center" Margin="10,5,10,5" Click="Button_Click_1" Grid.ColumnSpan="2"  IsEnabled="{Binding Path=IsChecked,ElementName=connectbutton}"/>
-                <Label Content="帧" Grid.Column="1" FontSize="14" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Bold" />
+                <Label Content="Frames" Grid.Column="1" FontSize="14" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Bold" />
                 <TextBox x:Name="framNum"  TextWrapping="Wrap" Text="200"  HorizontalContentAlignment="Center" VerticalContentAlignment="Center" FontWeight="Bold" FontSize="14"  Margin="10,10,10,10" IsEnabled="{Binding Path=IsChecked,ElementName=connectbutton}"/>
             </Grid>
         </GroupBox>
